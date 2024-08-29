@@ -1,0 +1,43 @@
+{
+  "manifest_version": 3,
+  "name": "Fastr",
+  "version": "1.2",
+  "description": "Set of tools to make you workflows faster",
+  "action": {
+    "default_popup": "index.html",
+    "default_icon": {
+      "48": "icon48.png"
+    }
+  },
+  "permissions": [
+    "scripting",
+    "activeTab",
+    "storage",
+    "extension"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ],
+  "host_permissions": [
+    "https://*/*", 
+    "http://*/*",
+    "http://127.0.0.1:8000/"
+
+  ],
+  "icons": {
+    "48": "icon48.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["src/engines.json"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+
+}

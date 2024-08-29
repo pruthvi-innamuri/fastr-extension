@@ -1,0 +1,57 @@
+export const apiCall = async (inputText: string) => {
+  const payload = {
+    input_text: inputText + ' Keep under 300 characters!',
+  };
+
+  try {
+    const response = await fetch('http://localhost:8000/llm_call', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log('Data', data);
+    return data.response;
+  } catch (error) {
+    console.error('Error:', error);
+    throw error;
+  }
+};
+
+export const originalApiCall = async (inputText: string, url: string, api_key: string) => {
+  const payload = {
+    messages: [
+      {
+        role: "user",
+        content: inputText + ' Keep under 300 characters!',
+      },
+    ],
+    model: "llama3-8b-8192",
+  };
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${api_key}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    console.error(`Error: ${response.status}`);
+    const errorData = await response.json();
+    console.error(errorData);
+    return undefined;
+    
+  } else {
+    return response;
+  }
+};

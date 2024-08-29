@@ -1,0 +1,18 @@
+{
+    "builds": [
+        {
+            "src": "api/main.py",
+            "use": "@vercel/python",
+            "config": {
+                "runtime": "python3.9"
+            }
+        }
+    ],
+    "routes": [
+        {
+            "src": "/(.*)",
+            "dest": "api/main.py"
+        }
+    ],
+    "buildCommand": "sh vercel.sh"
+}
