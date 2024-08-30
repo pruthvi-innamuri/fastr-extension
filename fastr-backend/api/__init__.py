@@ -16,7 +16,7 @@ API_KEYS = {
         'elevenlabs': ""
     },
     'llm_call': {
-        'groq': "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"
+        'groq': ""
     }
 }
 

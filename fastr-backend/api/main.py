@@ -2,34 +2,36 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from api import API_KEYS, EXT_ENDPOINTS, INT_ENDPOINTS, MODEL_PREFERENCES
+from api import API_KEYS, EXT_ENDPOINTS, MODEL_PREFERENCES
 from fastapi import FastAPI, HTTPException, Response, WebSocket
-from fastapi.responses import StreamingResponse, FileResponse
+from fastapi.responses import FileResponse
 import httpx
 import websockets as ws
-from models import LLMInput, TextToSpeechInput
+from models import LLMInput, TextToSpeechInput, RAGInput
 import tempfile
 import json
 import base64
-import asyncio
-import pyaudio
 from rag.rag import query_rag
+from typing import Union
 
 
 
 app = FastAPI()
 
 @app.get("/")
-async def health_check():
+async def health_check() -> str:
     return "The health check is successful!"
 
 @app.get("/api_keys")
-async def get_api_keys():
+async def get_api_keys() -> dict[str, str]:
     return API_KEYS
 
 
 @app.post("/llm_call")
-async def api_call(llm_input: LLMInput):
+async def api_call(llm_input: LLMInput) -> dict[str, str]:
+    """
+    Function to handle the LLM call
+    """
     payload = {
         "messages": [
             {
@@ -62,13 +64,22 @@ async def api_call(llm_input: LLMInput):
 
 
 @app.post("/rag_call")
-async def rag_call(context: str, query_text: str):
-    full_response = await query_rag(context, query_text)
+async def rag_call(rag_input: RAGInput) -> dict[str, Union[str, list[str]]]:
+    """
+    Function to handle the RAG call
+    """
+    full_response = await query_rag(rag_input.context, rag_input.query_text)
     return full_response
 
 
 @app.post("/text_to_speech_call")
-async def text_to_speech(text_to_speech_input: TextToSpeechInput):
+async def text_to_speech(text_to_speech_input: TextToSpeechInput) -> FileResponse:
+    """
+    Function to handle the text to speech call
+    1. Prepare the request
+    2. Send and process the request
+    3. Return the response
+    """
 
     voice_id = MODEL_PREFERENCES.get('text_to_speech').get('female')
     uri = EXT_ENDPOINTS.get('txt2speech').replace('{voice_id}', voice_id)
@@ -100,20 +111,26 @@ async def text_to_speech(text_to_speech_input: TextToSpeechInput):
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
         
+# lower latency approach using websockets
 @app.websocket("/text_to_speech_websocket")
-async def text_to_speech_websocket(websocket: WebSocket):
-    # Initialize the connection with client
+async def text_to_speech_websocket(websocket: WebSocket, t2s_input: TextToSpeechInput) -> None:
+    """
+    Initialize the connection with client
+    Function to handle the websocket connection with elevenlabs
+    Send the audio in chunks (while loop)
+    Close the connection
+    """
+
+
     await websocket.accept()
 
-    voice_id = MODEL_PREFERENCES.get('text_to_speech').get('male')
+    voice_id = MODEL_PREFERENCES.get('text_to_speech').get(t2s_input.voice_type)
     model = MODEL_PREFERENCES.get('text_to_speech').get('model')
     uri = f"wss://api.elevenlabs.io/v1/text-to-speech/{voice_id}/stream-input?model_id={model}"
 
 
-    # Function to handle the websocket connection with elevenlabs
-    async def text_to_speech_websocket_call(uri):
+    async def text_to_speech_websocket_call(uri) -> None:        
         async with ws.connect(uri) as ws_connection:
-            # Initialize the connection 
             bos_message = {
                 "text": " ",
                 "voice_settings": {
@@ -130,13 +147,11 @@ async def text_to_speech_websocket(websocket: WebSocket):
             }
             await ws_connection.send(json.dumps(input_message))
             
-            
             eos_message = {
                 "text": ""
             }
-            await ws_connection.send(json.dumps(eos_message))
+            await ws_connection.send(json.dumps({eos_message}))
 
-            # Added a loop to handle server responses and print the data received
             while True:
                 try:
                     response = await ws_connection.recv()
@@ -158,7 +173,16 @@ async def text_to_speech_websocket(websocket: WebSocket):
     await websocket.close()
 
 @app.post("/pass-api-keys")
-async def pass_api_keys(api_keys: dict):
+async def pass_api_keys(api_keys: dict) -> dict[str, str]:
+    """
+
+    Function to update the API keys in the API_KEYS dictionary
+    Check if the keys are present and valid
+    Update the API_KEYS dictionary
+    Return a success message
+
+    """
+
     try:
         groq_api_key = api_keys.get("groq")
         elevenlabs_api_key = api_keys.get("elevenlabs")
@@ -166,7 +190,6 @@ async def pass_api_keys(api_keys: dict):
         if not groq_api_key or not elevenlabs_api_key:
             raise HTTPException(status_code=400, detail="Both Groq and ElevenLabs API keys are required")
 
-        # Test Groq API key
         async def test_groq_api():
             test_payload = {
                 "messages": [{"role": "user", "content": "Hello"}],
@@ -185,7 +208,6 @@ async def pass_api_keys(api_keys: dict):
                 except httpx.HTTPStatusError:
                     return False
 
-        # Test ElevenLabs API key
         async def test_elevenlabs_api():
             test_payload = {
                 "text": "Test",
@@ -205,7 +227,6 @@ async def pass_api_keys(api_keys: dict):
                 except httpx.HTTPStatusError:
                     return False
 
-        # Test both API keys
         groq_valid = await test_groq_api()
         elevenlabs_valid = await test_elevenlabs_api()
 
@@ -214,10 +235,8 @@ async def pass_api_keys(api_keys: dict):
         if not elevenlabs_valid:
             raise HTTPException(status_code=400, detail="Invalid ElevenLabs API key")
         
-        # Update the API_KEYS dictionary
         API_KEYS['llm_call']['groq'] = groq_api_key
         API_KEYS['text_to_speech']['elevenlabs'] = elevenlabs_api_key
-        
         return {"message": "API keys updated successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error updating API keys: {str(e)}")

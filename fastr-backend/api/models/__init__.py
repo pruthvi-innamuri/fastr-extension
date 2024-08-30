@@ -6,3 +6,7 @@ class LLMInput(BaseModel):
 class TextToSpeechInput(BaseModel):
     input_text: str
     voice_type: str
+
+class RAGInput(BaseModel):
+    context: str
+    query_text: str

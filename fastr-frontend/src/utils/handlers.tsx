@@ -3,12 +3,22 @@ import { apiCall } from './apicalls';
 // Handlers for the popup
 
 const getResponseHandler = async (inputText: string, setApiResponse: (response: string) => void) => {
+    /*
+     * Get the response from the API
+     * This function sends the input text to the API
+     * and sets the response using the provided setter function
+     */
     console.log('Getting response');
     const response = await apiCall(inputText);
     setApiResponse(response || 'Error occurred while fetching data.');
   };
 
 const saveHandler = (inputText: string, apiResponse: string, setInputText: (text: string) => void, setApiResponse: (response: string) => void) => {
+    /*
+     * Save the response to the local storage
+     * This function saves the input text and the API response to the local storage
+     * and sets the input and API response to empty strings
+     */
     console.log('Saving response');
     chrome.storage.local.get(['savedResponses'], (result) => {
         const savedResponses = result.savedResponses || [];
@@ -24,18 +34,28 @@ const saveHandler = (inputText: string, apiResponse: string, setInputText: (text
 };
 
 const clearHandler = (setInputText: (text: string) => void, setApiResponse: (response: string) => void) => {
+    /*
+     * Clear the saved responses from the local storage
+     * This function clears the saved responses from the local storage
+     * and sets the input and API response to empty strings
+     */
     console.log('Clearing all responses');
     chrome.storage.local.set({ savedResponses: [] }, () => {
         console.log('Cleared all saved responses');
     });
 
-    // Clear input and API response
     setInputText('');
     setApiResponse('');
     chrome.storage.local.set({ current_selection: '' }, () => {});
 };
 
 const downloadHandler = (setApiResponse: (response: string) => void) => {
+    /*
+     * Download the saved responses from the local storage
+     * This function downloads the saved responses from the local storage
+     * and sets the API response to the saved responses
+     */
+    
     console.log('Downloading saved responses');
     chrome.storage.local.get(['savedResponses'], (result) => {
         const savedResponses = result.savedResponses || [];
@@ -67,48 +87,57 @@ const downloadHandler = (setApiResponse: (response: string) => void) => {
     });
 };
 const textToSpeechHandler = async (text: string, setApiResponse: (response: string) => void) => {
-  console.log('Converting text to speech');
-  const payload = {
-    input_text: text,
-    voice_type: 'default' // You can change this if you want to support different voice types
-  };
+    /*
+     * Convert the text to speech
+     * This function converts the text to speech using the API
+     * and plays the audio
+     */
 
-  try {
-    const response = await fetch('http://localhost:8000/text_to_speech_call', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    });
+    console.log('Converting text to speech');
+    const payload = {
+        input_text: text,
+        voice_type: 'default'
+    };
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    try {
+        const response = await fetch('http://localhost:8000/text_to_speech_call', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const audioBlob = await response.blob();
+        const audioUrl = URL.createObjectURL(audioBlob);
+        
+        const audio = new Audio(audioUrl);
+        audio.play();
+
+    } catch (error) {
+        console.error('Error:', error);
+        setApiResponse(`Error converting text to speech: ${error}`);
     }
-
-    const audioBlob = await response.blob();
-    const audioUrl = URL.createObjectURL(audioBlob);
-    
-    const audio = new Audio(audioUrl);
-    audio.play();
-
-  } catch (error) {
-    console.error('Error:', error);
-    setApiResponse(`Error converting text to speech: ${error}`);
-  }
 };
 
 const textToSpeechSocketHandler = async (text: string, setApiResponse: (response: string) => void) => {
+    /*
+     * Convert the text to speech using WebSocket
+     * Faster time to first byte and lower latency
+     */
+
     console.log('Converting text to speech');
     const payload = {
       input_text: text,
-      voice_type: 'default' // You can change this if you want to support different voice types
+      voice_type: 'default'
     };
   
     try {
         const socket = new WebSocket('ws://127.0.0.1:8000/text_to_speech_websocket');
-        //const audioQueue: HTMLAudioElement[] = [];
-        //let isPlaying = false;
 
         socket.onopen = () => {
             console.log('WebSocket connection opened');

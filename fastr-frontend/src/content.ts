@@ -32,6 +32,13 @@ const handleUserSearch = (event: KeyboardEvent): undefined => {
   return undefined;
 }
 
+// Listen for message to scrape the page content
+chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
+  if (request.action === "getPageContent") {
+    sendResponse({ content: document.body.innerText });
+  }
+});
+
 const initializeContentScript = () => {
   console.log('Content script loaded');
   document.addEventListener('keydown', handleUserSearch);

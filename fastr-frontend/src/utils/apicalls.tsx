@@ -1,10 +1,36 @@
-export const apiCall = async (inputText: string) => {
-  const payload = {
-    input_text: inputText + ' Keep under 300 characters!',
-  };
-
+const getPageContent = async (): Promise<string> => {
   try {
-    const response = await fetch('http://localhost:8000/llm_call', {
+    const tabs = await chrome.tabs.query({active: true, currentWindow: true});
+    if (!tabs[0]?.id) return '';
+
+    return new Promise((resolve) => {
+      chrome.tabs.sendMessage(
+        tabs[0].id!,
+        {action: "getPageContent"},
+        (response) => {
+          resolve(response?.content || '');
+        }
+      );
+    });
+  } catch (error) {
+    console.error('Error getting page content:', error);
+    return '';
+  }
+};
+
+
+export const apiCall = async (inputText: string) => {
+  
+  try { 
+    const context = await getPageContent();
+    console.log('Context', context);
+  
+    const payload = {
+      query_text: inputText,
+      context: context,
+    };
+  
+    const response = await fetch('http://localhost:8000/rag_call', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
