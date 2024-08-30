@@ -13,6 +13,8 @@ The primary goal of **Fastr** is to enhance productivity by reducing the time an
 - **Highlight & Trigger**: Highlight any text on a webpage and press `Tab` to open the Fastr chatbox.
 - **LLM Integration**: The chatbox leverages an advanced language model to provide context-aware responses.
 - **RAG-Powered**: Utilizes Retrieval-Augmented Generation (RAG) to pull in the most relevant content from the entire webpage.
+- **Session Persistence**: Save your questions and responses between browsing sessions, allowing you to pick up where you left off.
+- **Export to txt**: Easily export all your questions and responses from a session into a `.txt` file for documentation or future reference.
 - **Seamless Browser Integration**: Designed to work effortlessly within your Chrome browser.
 
 ## Demo
@@ -52,6 +54,8 @@ Below is an overview of the system architecture that powers Fastr:
 2. Highlight the text you want to query.
 3. Press the `Tab` key to open the Fastr chatbox.
 4. Interact with the LLM to get context-aware insights and information.
+5. **Save Responses**: Responses are saved automatically between sessions, allowing you to revisit your questions and answers later.
+6. **Export to TXT**: At any time, export the entire session (questions and responses) to a `.txt` file for easy documentation.
 
 ## Contributing
 
@@ -71,3 +75,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Contact
 
 For any inquiries or feedback, feel free to reach out via [your-email@example.com](mailto:your-email@example.com).
+
