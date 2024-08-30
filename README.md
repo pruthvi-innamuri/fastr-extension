@@ -21,7 +21,7 @@ The primary goal of **Fastr** is to enhance productivity by reducing the time an
 
 Check out a quick demo of Fastr in action:
 
-![Fastr Demo](demo/video-link-here)
+[![Fastr Demo](https://img.youtube.com/vi/lrozR8oANZw/0.jpg)](https://youtu.be/lrozR8oANZw)
 
 ## Systems Architecture
 
