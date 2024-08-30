@@ -1,4 +1,4 @@
-# Fastr
+# Fastr 💨
 
 ### Speed Up Your Browser Workflow
 
