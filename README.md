@@ -73,7 +73,7 @@ Below is a quick summary of the key endpoints:
 3. **POST `/rag_call`**: 
    - Receives a webpage's content (context) and user query.
    - **Chunking**: Splits the context into smaller chunks.
-   - **Vectorization & Storage**: Vectorizes the chunks and stores them in Chroma DB.
+   - **Vectorization & Storage**: Vectorizes the chunks using <a href="https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2" target="_blank"> huggingface embeddings model</a> and stores them in Chroma DB.
    - **Query Matching**: Vectorizes the query and retrieves the top `n` most relevant chunks using cosine similarity.
    - **Prompt Construction**: Combines the query with the relevant chunks into a template prompt.
    - **LLM Call**: Forwards the prompt to the `/llm_call` endpoint.
