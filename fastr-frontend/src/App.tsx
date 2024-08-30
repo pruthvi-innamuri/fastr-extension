@@ -1,6 +1,6 @@
 import './App.css'
 import { useEffect, useState } from 'react'
-import { getResponseHandler, saveHandler, clearHandler, downloadHandler, textToSpeechHandler, clearSelectionHandler } from './utils/handlers';
+import { getResponseHandler, saveHandler, clearHandler, downloadHandler, textToSpeechSocketHandler, clearSelectionHandler } from './utils/handlers';
 import ArrowUpOnSquareIcon from '@heroicons/react/24/outline/ArrowUpOnSquareIcon'; // Export Icon
 import { PaperAirplaneIcon } from '@heroicons/react/16/solid'; // send icon
 import BookmarkIcon from '@heroicons/react/24/outline/BookmarkIcon'; // save icon
@@ -71,7 +71,7 @@ function App() {
               <BookmarkIcon className="text-white" style={{ display: 'block', height: '2rem', width: '2rem' }}/>
             </button>
             <button 
-              onClick={() => textToSpeechHandler(apiResponse, setApiResponse)}
+              onClick={() => textToSpeechSocketHandler(apiResponse, setApiResponse)}
               className="flex items-center justify-center p-2 ml-1 mr-2"
               title="Listen"
             >        
