@@ -38,6 +38,7 @@
       "resources": ["src/engines.json"],
       "matches": ["<all_urls>"]
     }
-  ]
+  ],
+  "options_page": "options.html"
 
 }

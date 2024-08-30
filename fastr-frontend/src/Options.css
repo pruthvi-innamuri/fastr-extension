@@ -1,0 +1,9 @@
+.options-container {
+  margin: 1rem auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+label {
+  font-size: 1.1em;
+}

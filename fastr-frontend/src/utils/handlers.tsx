@@ -180,4 +180,28 @@ const clearSelectionHandler = (setInputText: (text: string) => void, setApiRespo
 };
 
 
-export { getResponseHandler, saveHandler, clearHandler, downloadHandler, textToSpeechHandler, textToSpeechSocketHandler, clearSelectionHandler };
+const saveApiKeysHandler = async (groq: string, elevenlabs: string) => {
+    try {
+        const response = await fetch('http://localhost:8000/pass-api-keys', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ groq, elevenlabs }),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.detail || response.statusText);
+        }
+
+        const data = await response.json();
+        console.log('API keys saved successfully:', data);
+        return data;
+    } catch (error) {
+        console.error('Error saving API keys:', error);
+        return error;
+    }
+};
+
+export { getResponseHandler, saveHandler, clearHandler, downloadHandler, textToSpeechHandler, textToSpeechSocketHandler, clearSelectionHandler, saveApiKeysHandler };

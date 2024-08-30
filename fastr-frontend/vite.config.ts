@@ -9,6 +9,7 @@ export default defineConfig({
         main: 'index.html',
         background: 'src/background.ts',
         content: 'src/content.ts',
+        options: 'options.html'
       },
       output: {
         entryFileNames: '[name].js',

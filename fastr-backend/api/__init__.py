@@ -13,7 +13,7 @@ EXT_ENDPOINTS = {
 
 API_KEYS = {
     'text_to_speech': {
-        'elevenlabs': "sk_85ce43ac24bffd3de3a83df192611f28187c3e1778dff6da"
+        'elevenlabs': ""
     },
     'llm_call': {
         'groq': "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"

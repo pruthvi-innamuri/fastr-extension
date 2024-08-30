@@ -13,6 +13,7 @@ import json
 import base64
 import asyncio
 import pyaudio
+from rag.rag import query_rag
 
 
 
@@ -21,6 +22,10 @@ app = FastAPI()
 @app.get("/")
 async def health_check():
     return "The health check is successful!"
+
+@app.get("/api_keys")
+async def get_api_keys():
+    return API_KEYS
 
 
 @app.post("/llm_call")
@@ -34,8 +39,6 @@ async def api_call(llm_input: LLMInput):
         ],
         "model": MODEL_PREFERENCES['llm_call']['model'],
     }
-
-    print(payload)
 
     async with httpx.AsyncClient() as client:
         try:
@@ -55,6 +58,14 @@ async def api_call(llm_input: LLMInput):
             raise HTTPException(status_code=e.response.status_code, detail=str(e))
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
+        
+
+
+@app.post("/rag_call")
+async def rag_call(context: str, query_text: str):
+    full_response = await query_rag(context, query_text)
+    return full_response
+
 
 @app.post("/text_to_speech_call")
 async def text_to_speech(text_to_speech_input: TextToSpeechInput):
@@ -142,10 +153,71 @@ async def text_to_speech_websocket(websocket: WebSocket):
                 except ws.exceptions.ConnectionClosed:
                     print("Connection closed")
                     break
-            
-
-            
-
 
     await text_to_speech_websocket_call(uri)
     await websocket.close()
+
+@app.post("/pass-api-keys")
+async def pass_api_keys(api_keys: dict):
+    try:
+        groq_api_key = api_keys.get("groq")
+        elevenlabs_api_key = api_keys.get("elevenlabs")
+
+        if not groq_api_key or not elevenlabs_api_key:
+            raise HTTPException(status_code=400, detail="Both Groq and ElevenLabs API keys are required")
+
+        # Test Groq API key
+        async def test_groq_api():
+            test_payload = {
+                "messages": [{"role": "user", "content": "Hello"}],
+                "model": MODEL_PREFERENCES['llm_call']['model'],
+            }
+            async with httpx.AsyncClient() as client:
+                try:
+                    response = await client.post(
+                        EXT_ENDPOINTS['llm_call'],
+                        json=test_payload,
+                        headers={"Authorization": f"Bearer {groq_api_key}"},
+                        timeout=10.0
+                    )
+                    response.raise_for_status()
+                    return True
+                except httpx.HTTPStatusError:
+                    return False
+
+        # Test ElevenLabs API key
+        async def test_elevenlabs_api():
+            test_payload = {
+                "text": "Test",
+                "voice_id": MODEL_PREFERENCES['text_to_speech']['male'],
+                "model_id": MODEL_PREFERENCES['text_to_speech']['model']
+            }
+            async with httpx.AsyncClient() as client:
+                try:
+                    response = await client.post(
+                        EXT_ENDPOINTS['txt2speech'].format(voice_id=MODEL_PREFERENCES['text_to_speech']['male']),
+                        json=test_payload,
+                        headers={"xi-api-key": elevenlabs_api_key},
+                        timeout=10.0
+                    )
+                    response.raise_for_status()
+                    return True
+                except httpx.HTTPStatusError:
+                    return False
+
+        # Test both API keys
+        groq_valid = await test_groq_api()
+        elevenlabs_valid = await test_elevenlabs_api()
+
+        if not groq_valid:
+            raise HTTPException(status_code=400, detail="Invalid Groq API key")
+        if not elevenlabs_valid:
+            raise HTTPException(status_code=400, detail="Invalid ElevenLabs API key")
+        
+        # Update the API_KEYS dictionary
+        API_KEYS['llm_call']['groq'] = groq_api_key
+        API_KEYS['text_to_speech']['elevenlabs'] = elevenlabs_api_key
+        
+        return {"message": "API keys updated successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating API keys: {str(e)}")
