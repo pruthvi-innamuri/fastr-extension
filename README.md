@@ -60,7 +60,7 @@ This approach ensures a responsive and seamless user experience.
 The backend is built using **FastAPI** (Python), **Langchain** (RAG Framework), **Chroma** (vector database), **Elevenlabs** (txt-to-speech), **GroqCloud** (LLM Inference). 
 
 #### Systems Overview
-<img width="849" alt="Screenshot 2024-08-30 at 1 06 58 PM" src="https://github.com/user-attachments/assets/e57282d7-7084-4318-b3ec-0059f3d3261b">
+<img width="800" alt="Screenshot 2024-08-31 at 1 22 42 AM" src="https://github.com/user-attachments/assets/6ab4c5a1-2ab4-4aed-b0ca-bd125df246e4">
 
 
 #### Endpoints
